@@ -12,7 +12,15 @@ client = OpenAI(api_key=Config.OPENAI_API_KEY)
 
 
 #############################-- Functions Related to invoices -- ##############################################
-invoices_airtable = Airtable()
+invoices_airtable = Airtable(Config.INVOICE_AIRTABLE_TOKEN, 
+                            Config.INVOICE_AIRTABLE_BASE_ID, 
+                            Config.INVOICE_AIRTABLE_TABLE_ID, 
+                            Config.INVOICE_AIRTABLE_FIELDS)
+
+def check_invoices():
+    """Function to get all the invoices records
+    """
+    return invoices_airtable.get_all_records()
 
 def create_invoice(business_name, phone_number, email):
     """Function to create a new invoice
@@ -172,13 +180,19 @@ def create_assistant(client):
             instructions=assistant_instructions,
             model="gpt-4-1106-preview",
             tools=[
+                {"type": "retrieval"},  # This adds the knowledge base as a tool
                 {
-                    "type": "retrieval"  # This adds the knowledge base as a tool
+                    "type": "function",
+                    "function": {
+                        "name": "check_invoices",  # This adds the check invoices function as a tool
+                        "description": "Function to get all the existing invoices records",
+                        "parameters": {}
+                    }
                 },
                 {
                     "type": "function",
                     "function": {
-                        "name": "create_invoice", # This adds the create invoices function as a tool
+                        "name": "create_invoice",  # This adds the create invoices function as a tool
                         "description": "Function to create a new invoice",
                         "parameters": {
                             "type": "object",

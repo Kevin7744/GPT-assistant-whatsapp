@@ -139,6 +139,11 @@ class ConversationManager:
                         
                         ####################################################################################################    
                         # Handle Function calling related to invoices
+                        elif tool_call.function.name == "check_invoices":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.check_invoices()
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                            
                         elif tool_call.function.name == "create_invoice":
                             arguments = json.loads(tool_call.function.arguments)
                             output = functions.create_invoice(arguments["business_name"], arguments["phone_number"], arguments["email"])
@@ -155,7 +160,7 @@ class ConversationManager:
                             tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
                         
                         ######################################################################################################
-                        # Handle other function
+                        # Handle other functions
                 
                 time.sleep(1)  # Wait for a second before checking again
                 
