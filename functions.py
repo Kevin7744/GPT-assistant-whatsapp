@@ -4,10 +4,69 @@ import os
 from openai import OpenAI
 from prompts import assistant_instructions
 from config import Config
+from airtable_wrapper import Airtable
 
 # Init OpenAI Client
 client = OpenAI(api_key=Config.OPENAI_API_KEY)
 
+
+
+#############################-- Functions Related to invoices -- ##############################################
+invoices_airtable = Airtable()
+
+def create_invoice(business_name, phone_number, email):
+    """Function to create a new invoice
+
+    Args:
+        business_name (str): The name of the business
+        phone_number (str, optional): The phone number of the business. Defaults to ''.
+        email (str, optional): The email of the business. Defaults to ''.
+        
+    Returns:
+        str: The response from the bot
+    """
+    output = {'Bedrijf': business_name}
+            
+    if phone_number:
+        output['Telefoonnummer'] = phone_number
+    
+    if email:
+        output['Email'] = email
+    
+    invoices_airtable.create_record(output)
+    return f'Ok, I just created a new invoice for {business_name}. Is there anything else I can help you with?'
+
+
+# Function to delete an invoice
+def delete_invoice(business_name):
+    """Function to delete an invoice
+
+    Args:
+        business_name (str): The name of the business
+        
+    Returns:
+        str: The response from the bot
+    """
+    invoices_airtable.delete_record({'Bedrijf': business_name})
+    return f'Ok, I just deleted an invoice for {business_name}. Do you need help with anything else?'
+
+
+# Function to send an invoice
+def send_invoice(business_name):
+    """Function to send an invoice
+
+    Args:
+        business_name (str): The name of the business
+        
+    Returns:
+        str: The response from the bot
+    """
+    if invoices_airtable.update_record({'Bedrijf': business_name.strip().title()}, {'Status Factuur': 'Factuur Versturen...'}):
+        return f'Ok, I just updated the invoice status for {business_name}'
+
+
+
+################################## --Functions related to cleaning questions -- ###############################################################
 def create_lead(name, phone, address, email):
     # Change this to your Airtable API URL
     url = "https://api.airtable.com/v0/appCkbD804q1OaxGh/Leads"
@@ -89,6 +148,8 @@ def save_answers(full_name, phone, email, street_name, zip_code, city,
     else:
         print('Failed to save responses')
         return ''
+    
+#######################################################################################################
 
 def create_assistant(client):
     assistant_file_path = 'assistant.json'
@@ -117,7 +178,96 @@ def create_assistant(client):
                 {
                     "type": "function",
                     "function": {
-                        "name": "save_answers",
+                        "name": "create_invoice", # This adds the create invoices function as a tool
+                        "description": "Function to create a new invoice",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "business_name": {
+                                    "type": "string",
+                                    "description": "The name of the business"
+                                },
+                                "phone_number": {
+                                    "type": "string",
+                                    "description": "The phone number of the business"
+                                },
+                                "email": {
+                                    "type": "string",
+                                    "description": "The email of the business"
+                                }
+                            },
+                            "required": ["business_name"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "delete_invoice", # This adds the delete invoices function as a tool
+                        "description": "Function to delete an invoice",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "business_name": {
+                                    "type": "string",
+                                    "description": "The name of the business"
+                                }
+                            },
+                            "required": ["business_name"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "send_invoice", # This adds the send invoices function as a tool
+                        "description": "Function to send an invoice",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "business_name": {
+                                    "type": "string",
+                                    "description": "The name of the business"
+                                }
+                            },
+                            "required": ["business_name"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",  # This adds the lead capture as a tool
+                    "function": {
+                        "name": "create_lead",
+                        "description":
+                        "Capture lead details and save to Airtable.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Name of the lead."
+                                },
+                                "phone": {
+                                    "type": "string",
+                                    "description": "Phone number of the lead."
+                                },
+                                "address": {
+                                    "type": "string",
+                                    "description": "Address of the lead."
+                                },
+                                "email": {
+                                    "type": "string",
+                                    "description": "Email of the lead"
+                                }
+                            },
+                            "required": ["name", "phone", "address", "email"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "save_answers", # This adds the save answers as a tool
                         "description": """Capture the details of the user and the answers provided by the user a cleaning service booking and send them to a designated endpoint. 
                                         You must collect the user's personal details (full_name, phone, email, street_name, zip_code, city) before submitting the data to the endpoint.""",
                         "parameters": {

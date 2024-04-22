@@ -28,18 +28,18 @@ class ConversationManager:
         
         self.client = OpenAI(api_key=Config.OPENAI_API_KEY)
         
-        self.invoices_airtable = Airtable(Config.INVOICE_AIRTABLE_TOKEN, 
-                                          Config.INVOICE_AIRTABLE_BASE_ID, 
-                                          Config.INVOICE_AIRTABLE_TABLE_ID, 
-                                          Config.INVOICE_AIRTABLE_FIELDS)
-        self.invoices = self.invoices_airtable.get_all_records()
+        # self.invoices_airtable = Airtable(Config.INVOICE_AIRTABLE_TOKEN, 
+        #                                   Config.INVOICE_AIRTABLE_BASE_ID, 
+        #                                   Config.INVOICE_AIRTABLE_TABLE_ID, 
+        #                                   Config.INVOICE_AIRTABLE_FIELDS)
+        # self.invoices = self.invoices_airtable.get_all_records()
         
         
-        self.inventory_airtable = Airtable(Config.INVENTORY_AIRTABLE_TOKEN, 
-                                           Config.INVENTORY_AIRTABLE_BASE_ID, 
-                                           Config.INVENTORY_AIRTABLE_TABLE_ID, 
-                                           Config.INVENTORY_AIRTABLE_FIELDS)
-        self.inventory = self.inventory_airtable.get_all_records()
+        # self.inventory_airtable = Airtable(Config.INVENTORY_AIRTABLE_TOKEN, 
+        #                                    Config.INVENTORY_AIRTABLE_BASE_ID, 
+        #                                    Config.INVENTORY_AIRTABLE_TABLE_ID, 
+        #                                    Config.INVENTORY_AIRTABLE_FIELDS)
+        # self.inventory = self.inventory_airtable.get_all_records()
         
         self.outlook_wraper = OutlookWraper()
         self.assistant_id = functions.create_assistant(self.client)
@@ -82,6 +82,8 @@ class ConversationManager:
                 # Handle the function call
                 if run_status.required_action and run_status.required_action.type == 'submit_tool_outputs':
                     for tool_call in run_status.required_action.submit_tool_outputs.tool_calls:
+                        ###################################################################################################
+                        # Handle function calling related to cleaning questions and save answers
                         if tool_call.function.name == "create_lead":
                             # Process lead creation
                             arguments = json.loads(tool_call.function.arguments)
@@ -134,6 +136,26 @@ class ConversationManager:
                             )
         
                             tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                        
+                        ####################################################################################################    
+                        # Handle Function calling related to invoices
+                        elif tool_call.function.name == "create_invoice":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.create_invoice(arguments["business_name"], arguments["phone_number"], arguments["email"])
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                            
+                        elif tool_call.function.name == "create_invoice":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.delete_invoice(arguments["business_name"])
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                            
+                        elif tool_call.function.name == "create_invoice":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.send_invoice(arguments["business_name"])
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                        
+                        ######################################################################################################
+                        # Handle other function
                 
                 time.sleep(1)  # Wait for a second before checking again
                 
