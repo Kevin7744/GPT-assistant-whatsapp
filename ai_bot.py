@@ -43,6 +43,7 @@ class ConversationManager:
         
         self.outlook_wraper = OutlookWraper()
         self.assistant_id = functions.create_assistant(self.client)
+        self.start_conversation()
     
     # Start a conversation thread
     def start_conversation(self, platform="Not Specified"):
