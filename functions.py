@@ -171,7 +171,7 @@ def create_assistant(client):
     else: 
         # If no assistant.json is present, create a new assistant using
         file = client.files.create(file=open("knowledge.docx", "rb"), purpose='assistants')
-        file_invoices = client.files.create(file=open("invoices.docx", "rb"), purpose='assistants')
+        file_invoices = client.files.create(file=open("invoices.md", "rb"), purpose='assistants')
         file_site_data = client.files.create(file=open('site_data.txt', 'rb'), purpose='assistants')
 
         assistant = client.beta.assistants.create(
