@@ -8,6 +8,32 @@ from config import Config
 # Init OpenAI Client
 client = OpenAI(api_key=Config.OPENAI_API_KEY)
 
+def create_lead(name, phone, address, email):
+    # Change this to your Airtable API URL
+    url = "https://api.airtable.com/v0/appCkbD804q1OaxGh/Leads"
+    headers = {
+        "Authorization": Config.AIRTABLE_API_KEY,
+        "Content-Type": "application/json"
+    }
+    data = {
+        "records": [{
+            "fields": {
+                "Name": name,
+                "Phone": phone,
+                "Address": address,
+                "Email": email
+            }
+        }]
+    }
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        print("Lead created successfully.")
+        return response.json()
+    else:
+        print(f"Failed to create lead: {response.text}")
+        return ''
+
 def save_answers(full_name, phone, email, street_name, zip_code, city,
                  service_type, 
                  ot1, ot2, ot3, ot4, ot5,  # responses for one-time cleaning
