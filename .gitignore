@@ -16,6 +16,7 @@
 # Files and Folders
 .env
 config.py
+assistant.json
 
 # Mono auto generated files
 mono_crash.*
