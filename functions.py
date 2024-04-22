@@ -170,10 +170,9 @@ def create_assistant(client):
             print("Loaded existing assistant ID.")
     else: 
         # If no assistant.json is present, create a new assistant using
-        file = client.files.create(file=open("knowledge.docx", "rb"),
-                                   purpose='assistants')
-        
-        f2 = client.files.create(file=open('site_data.txt', 'rb'), purpose='assistants')
+        file = client.files.create(file=open("knowledge.docx", "rb"), purpose='assistants')
+        file_invoices = client.files.create(file=open("invoices.docx", "rb"), purpose='assistants')
+        file_site_data = client.files.create(file=open('site_data.txt', 'rb'), purpose='assistants')
 
         assistant = client.beta.assistants.create(
             # Getting assistant prompt from "prompts.py" file, edit on left panel if you want to change the prompt
@@ -359,7 +358,7 @@ def create_assistant(client):
                 }
 
             ],
-            file_ids=[file.id, f2.id])
+            file_ids=[file.id, file_invoices.id, file_site_data.id])
 
         # Create a new assistant.json file to load on future runs
         with open(assistant_file_path, 'w') as file:
