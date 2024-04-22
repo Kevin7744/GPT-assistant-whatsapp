@@ -26,22 +26,6 @@ class ConversationManager:
         # Initialize OpenAI client    
         self.client =OpenAI(api_key=Config.OPENAI_API_KEY)
         
-        self.client = OpenAI(api_key=Config.OPENAI_API_KEY)
-        
-        # self.invoices_airtable = Airtable(Config.INVOICE_AIRTABLE_TOKEN, 
-        #                                   Config.INVOICE_AIRTABLE_BASE_ID, 
-        #                                   Config.INVOICE_AIRTABLE_TABLE_ID, 
-        #                                   Config.INVOICE_AIRTABLE_FIELDS)
-        # self.invoices = self.invoices_airtable.get_all_records()
-        
-        
-        # self.inventory_airtable = Airtable(Config.INVENTORY_AIRTABLE_TOKEN, 
-        #                                    Config.INVENTORY_AIRTABLE_BASE_ID, 
-        #                                    Config.INVENTORY_AIRTABLE_TABLE_ID, 
-        #                                    Config.INVENTORY_AIRTABLE_FIELDS)
-        # self.inventory = self.inventory_airtable.get_all_records()
-        
-        self.outlook_wraper = OutlookWraper()
         self.assistant_id = functions.create_assistant(self.client)
         self.start_conversation()
     
