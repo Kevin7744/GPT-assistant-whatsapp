@@ -32,15 +32,3 @@ if __name__ == '__main__':
 #running app:
 #1) python3 main.py
 #2) ngrok http 5000 --domain=light-goat-driving.ngrok-free.app  (expose to the web using ngrok)
-
-import json
-
-# Open the JSON file for reading
-with open("batch.json", "r", encoding="utf-8") as json_file:
-    data = json.load(json_file)
-
-# Open a new file in JSONL format for writing
-with open("batch.jsonl", "w", encoding="utf-8") as jsonl_file:
-    # Write each JSON object from the original file as a separate line in the new file
-    for item in data:
-        jsonl_file.write(json.dumps(item) + "\n")

@@ -42,7 +42,7 @@ class ConversationManager:
         self.inventory = self.inventory_airtable.get_all_records()
         
         self.outlook_wraper = OutlookWraper()
-        self.assistant_id = function
+        self.assistant_id = functions.create_assistant(self.client)
     
     # Start a conversation thread
     def start_conversation(self, platform="Not Specified"):
@@ -50,23 +50,26 @@ class ConversationManager:
         
         thread = self.client.beta.threads.create()
         print(f"new thread created with ID: {thread.id}")
+        self.thread_id = thread.id
+        return self.thread_id
         
-        return jsonify({"thread_id": thread.id})
+    def chat(self, user_input):
+        if self.thread_id is None:
+            raise ValueError("Thread ID is not set. Call start_conversation first.")
         
-    def chat(self, thread_id, user_input):
-        print(f"Received message: {user_input} for thread ID: {thread_id}")
+        print(f"Received message: {user_input} for thread ID: {self.thread_id}")
         
         # Add the user's message to the thread
-        self.client.beta.threads.messages.create(thread_id=thread_id,
+        self.client.beta.threads.messages.create(thread_id=self.thread_id,
                                                  role="user",
                                                  content=user_input)
         
-        # Run the assistent
-        run = self.client.beta.threads.runs.create(thread_id=thread_id,
+        # Run the assistant
+        run = self.client.beta.threads.runs.create(thread_id=self.thread_id,
                                                    assistant_id=self.assistant_id)
         # Check if assistant requires function call
         while True:
-            run_status = self.client.beta.threads.runs.retrieve(thread_id=thread_id,
+            run_status = self.client.beta.threads.runs.retrieve(thread_id=self.thread_id,
                                                                 run_id=run.id)
             if run_status.status == 'completed':
                 break
@@ -86,24 +89,27 @@ class ConversationManager:
 
                 if run_status.required_action.type == 'submit_tool_outputs':
                     print("Submit output")
-                    self.client.beta.threads.runs.submit_tool_outputs(thread_id=thread_id, run_id=run.id,
+                    self.client.beta.threads.runs.submit_tool_outputs(thread_id=self.thread_id, run_id=run.id,
                                                                        tool_outputs=tools_outputs)
 
         # Retrieve and return the latest message from the assistant
-        messages = self.client.beta.threads.messages.list(thread_id=thread_id)
+        messages = self.client.beta.threads.messages.list(thread_id=self.thread_id)
         response = messages.data[0].content[0].text.value
 
         print(f"Assistant response: {response}")
-        return response           
+        return response 
+    
+    def handle_message(self, user_input):
+        if self.thread_id is None:
+            self.start_conversation()
+        
+        response = self.chat(user_input)
+        return response
+         
     
 if __name__ == '__main__':
-    conversation_manager = ConversationManager()
-    thread_id = conversation_manager.start_conversation()
+    bot = ConversationManager()
 
     while True:
-        user_input = input("You: ")
-        if user_input.lower() == 'exit':
-            break
-
-        response = conversation_manager.chat(thread_id, user_input)
-        print("Assistant:", response)
+        msg = input('User: ')
+        print(f'BOT: {bot.handle_message(msg)}')
