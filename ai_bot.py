@@ -161,8 +161,17 @@ class ConversationManager:
                             tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
                         
                         # Handles function calling related to calendar
+                        elif tool_call.function.name == "create_event":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.create_event(arguments["name"], arguments["date"], arguments["time"], arguments["duration"])
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                            
+                        elif tool_call.function.name == "create_recurring_event":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.create_recurring_event(arguments["name"], arguments["days_of_week"], arguments["start_time"], arguments["end_time"], arguments["start_date"], arguments["end_date"], arguments["length_weeks"])
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})            
                         
-                time.sleep(1)  # Wait for a second before checking again
+                time.sleep(2)  # Wait for a second before checking again
                 
                 if tools_outputs:
                     self.client.beta.threads.runs.submit_tool_outputs(thread_id=self.thread_id, run_id=run.id,

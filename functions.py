@@ -6,6 +6,7 @@ from prompts import assistant_instructions
 from config import Config
 from airtable_wrapper import Airtable
 from outlook_wraper import OutlookWraper
+import datetime
 
 # Init OpenAI Client
 client = OpenAI(api_key=Config.OPENAI_API_KEY)
@@ -123,6 +124,60 @@ def create_inventory(product, current_stock, min_stock):
     else:
         return 'Unfortunately, there was an error processing your request. Please try again'
    
+
+################################### -- Functions related to calendar events -- ####################################################################################
+outlook_wraper = OutlookWraper()
+
+# Function to handle single event creation on the calendar
+def create_event(name, date, time, duration):
+    """Function to handle creating a single event in the calendar
+
+    Args:
+        name (str): The name of the event
+        date (str): The date of the event in the format dd/mm/yyyy
+        time (str): The start time of the event in the format hh:mm
+        duration (str): The duration of the event in the format hh:mm
+        
+    Returns:
+        str: The response from the bot
+    """
+    start_date = datetime.datetime.strptime(date + " " + time, "%d/%m/%Y %H:%M")
+    duration_hours, duration_minutes = map(int, duration.split(':'))
+    end_date = start_date + datetime.timedelta(hours=duration_hours, minutes=duration_minutes)
+    
+    status = outlook_wraper.create_event(name, start_date, end_date)
+    
+    if status:
+        return f'Ok, I just added a new event to your calendar on {start_date} for {name}'
+    else:
+        return 'There was an error adding the event to the calendar, please try again'
+ 
+# Function to handle recurring event creation on the calendar 
+def create_recurring_event(name, days_of_week, start_time, end_time, start_date, end_date, length_weeks):
+    """Function to handle creating a recurring event in the calendar
+
+    Args:
+        name (str): The name of the event
+        days_of_week (list): List of days of the week when the event occurs
+        start_time (str): The start time of the event in the format hh:mm
+        end_time (str): The end time of the event in the format hh:mm
+        start_date (str): The start date of the event in the format dd/mm/yyyy
+        end_date (str): The end date of the event in the format dd/mm/yyyy
+        length_weeks (int): The number of weeks the event repeats for
+        
+    Returns:
+        str: The response from the bot
+    """
+    start_date = datetime.datetime.strptime(start_date, "%d/%m/%Y").strftime("%Y-%m-%d")
+    end_date = datetime.datetime.strptime(end_date, "%d/%m/%Y").strftime("%Y-%m-%d")
+    
+    status = outlook_wraper.create_recurring_event(name, days_of_week, start_time, end_time, start_date, end_date, length_weeks)
+    
+    if status:
+        return f'Ok, I just added a recurring event every {" and ".join(days_of_week)}'
+    else:
+        return 'There was an error adding the event to the calendar, please try again'
+
 
 
 ################################## -- Functions related to cleaning questions -- ###############################################################
@@ -349,6 +404,76 @@ def create_assistant(client):
                                 }
                             },
                             "required": ["product", "current_stock", "min_stock"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "create_event", # This adds single event creation function as a tool
+                        "description": "Function to handle creating a single event in the calendar",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "The name of the event"
+                                },
+                                "date": {
+                                    "type": "string",
+                                    "description": "The date of the event in the format dd/mm/yyyy"
+                                },
+                                "time": {
+                                    "type": "string",
+                                    "description": "The start time of the event in the format hh:mm"
+                                },
+                                "duration": {
+                                    "type": "string",
+                                    "description": "The duration of the event in the format hh:mm"
+                                }
+                            },
+                            "required": ["name", "date", "time", "duration"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "create_recurring_event", # This adds recurring event creation function as a tool
+                        "description": "Function to handle creating a recurring event in the calendar",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "The name of the event"
+                                },
+                                "days_of_week": {
+                                    "type": "array",
+                                    "description": "List of days of the week when the event occurs"
+                                },
+                                "start_time": {
+                                    "type": "string",
+                                    "description": "The start time of the event in the format hh:mm"
+                                },
+                                "end_time": {
+                                    "type": "string",
+                                    "description": "The end time of the event in the format hh:mm"
+                                },
+                                "start_date": {
+                                    "type": "string",
+                                    "description": "The start date of the event in the format dd/mm/yyyy"
+                                },
+                                "end_date": {
+                                    "type": "string",
+                                    "description": "The end date of the event in the format dd/mm/yyyy"
+                                },
+                                "length_weeks": {
+                                    "type": "integer",
+                                    "description": "The number of weeks the event repeats for"
+                                }
+                            },
+                            "required": ["name", "days_of_week", "start_time", "end_time", "start_date", "end_date", "length_weeks"]
                         }
                     }
                 },
