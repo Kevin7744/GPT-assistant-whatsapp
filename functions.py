@@ -5,6 +5,7 @@ from openai import OpenAI
 from prompts import assistant_instructions
 from config import Config
 from airtable_wrapper import Airtable
+from outlook_wraper import OutlookWraper
 
 # Init OpenAI Client
 client = OpenAI(api_key=Config.OPENAI_API_KEY)
@@ -17,11 +18,13 @@ invoices_airtable = Airtable(Config.INVOICE_AIRTABLE_TOKEN,
                             Config.INVOICE_AIRTABLE_TABLE_ID, 
                             Config.INVOICE_AIRTABLE_FIELDS)
 
+# Function to get all invoice records
 def check_invoices():
     """Function to get all the invoices records
     """
     return invoices_airtable.get_all_records()
 
+# Function to create an invoice
 def create_invoice(business_name, phone_number, email):
     """Function to create a new invoice
 
@@ -74,7 +77,55 @@ def send_invoice(business_name):
 
 
 
-################################## --Functions related to cleaning questions -- ###############################################################
+############################################# -- Functions related to Inventory -- ####################################################################
+inventory_airtable = Airtable(Config.INVENTORY_AIRTABLE_TOKEN, 
+                              Config.INVENTORY_AIRTABLE_BASE_ID, 
+                              Config.INVENTORY_AIRTABLE_TABLE_ID, 
+                              Config.INVENTORY_AIRTABLE_FIELDS)
+
+        
+# Function to get ll inventory records
+def check_inventory():
+    """Function to get all the inventory records
+    """
+    return inventory_airtable.get_all_records()
+
+# Function to handle changes in inventory
+def change_inventory(product, current_stock):
+    """Function to update the stock of a product in inventory
+
+    Args:
+        product (str): The name of the product
+        current_stock (int): The new current stock value
+        
+    Returns:
+        str: The response from the bot
+    """
+    if inventory_airtable.update_record({'product': product}, {'huidige_stock': current_stock}):
+        return f'Ok, I just updated the entry for {product}'
+    else:
+        return 'What you are trying to do is not possible. It is likely you entered the name of a product that does not exist.'
+
+# Function to handle creating a new entry in inventory
+def create_inventory(product, current_stock, min_stock):
+    """Function to create a new entry in inventory
+
+    Args:
+        product (str): The name of the product
+        current_stock (int): The current stock of the product
+        min_stock (int): The minimum stock of the product
+        
+    Returns:
+        str: The response from the bot
+    """
+    if inventory_airtable.create_record({'product': product, 'huidige_stock': current_stock, 'minimum_stock': min_stock}):
+        return f'Ok, I just added an entry for a new product called {product}'
+    else:
+        return 'Unfortunately, there was an error processing your request. Please try again'
+   
+
+
+################################## -- Functions related to cleaning questions -- ###############################################################
 def create_lead(name, phone, address, email):
     # Change this to your Airtable API URL
     url = "https://api.airtable.com/v0/appCkbD804q1OaxGh/Leads"
@@ -157,8 +208,8 @@ def save_answers(full_name, phone, email, street_name, zip_code, city,
         print('Failed to save responses')
         return ''
     
+    
 #######################################################################################################
-
 def create_assistant(client):
     assistant_file_path = 'assistant.json'
     
@@ -172,6 +223,7 @@ def create_assistant(client):
         # If no assistant.json is present, create a new assistant using
         file = client.files.create(file=open("knowledge.docx", "rb"), purpose='assistants')
         file_invoices = client.files.create(file=open("invoices.md", "rb"), purpose='assistants')
+        file_inventory = client.files.create(file=open("inventory.md", "rb"), purpose='assistants')
         file_site_data = client.files.create(file=open('site_data.txt', 'rb'), purpose='assistants')
 
         assistant = client.beta.assistants.create(
@@ -244,6 +296,59 @@ def create_assistant(client):
                                 }
                             },
                             "required": ["business_name"]
+                        }
+                    }
+                },
+                {
+                        "type": "function",
+                        "function": {
+                            "name": "check_inventory", # This adds the check_inventory function as a tool
+                            "description": "Function to get all the inventory records"
+                        }
+                },
+                {
+                    "type": "function", 
+                    "function": {
+                        "name": "change_inventory", # This adds the change_inventory function as a tool
+                        "description": "Function to update the stock of a product in inventory",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "product": {
+                                    "type": "string",
+                                    "description": "The name of the product"
+                                },
+                                "current_stock": {
+                                    "type": "integer",
+                                    "description": "The new current stock value"
+                                }
+                            },
+                            "required": ["product", "current_stock"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "create_inventory", # This adds the create_inventory function as a tool
+                        "description": "Function to create a new entry in inventory",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "product": {
+                                    "type": "string",
+                                    "description": "The name of the product"
+                                },
+                                "current_stock": {
+                                    "type": "integer",
+                                    "description": "The current stock of the product"
+                                },
+                                "min_stock": {
+                                    "type": "integer",
+                                    "description": "The minimum stock of the product"
+                                }
+                            },
+                            "required": ["product", "current_stock", "min_stock"]
                         }
                     }
                 },
@@ -358,7 +463,7 @@ def create_assistant(client):
                 }
 
             ],
-            file_ids=[file.id, file_invoices.id, file_site_data.id])
+            file_ids=[file.id, file_invoices.id, file_inventory.id, file_site_data.id])
 
         # Create a new assistant.json file to load on future runs
         with open(assistant_file_path, 'w') as file:

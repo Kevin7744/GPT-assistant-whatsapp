@@ -122,7 +122,7 @@ class ConversationManager:
                             tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
                         
                         ####################################################################################################    
-                        # Handle Function calling related to invoices
+                        # Handles Function calling related to invoices
                         elif tool_call.function.name == "check_invoices":
                             arguments = json.loads(tool_call.function.arguments)
                             output = functions.check_invoices()
@@ -133,19 +133,35 @@ class ConversationManager:
                             output = functions.create_invoice(arguments["business_name"], arguments["phone_number"], arguments["email"])
                             tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
                             
-                        elif tool_call.function.name == "create_invoice":
+                        elif tool_call.function.name == "delete_invoice":
                             arguments = json.loads(tool_call.function.arguments)
                             output = functions.delete_invoice(arguments["business_name"])
                             tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
                             
-                        elif tool_call.function.name == "create_invoice":
+                        elif tool_call.function.name == "send_invoice":
                             arguments = json.loads(tool_call.function.arguments)
                             output = functions.send_invoice(arguments["business_name"])
                             tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
                         
                         ######################################################################################################
-                        # Handle other functions
-                
+                        # Handles function calling related to inventory
+                        elif tool_call.function.name == "check_inventory":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.check_invoices()
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                            
+                        elif tool_call.function.name == "change_inventory":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.change_inventory(arguments["product"], arguments["current_stock"])
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                            
+                        elif tool_call.function.name == "create_inventory":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.change_inventory(arguments["product"], arguments["current_stock"], arguments["min_stock"])
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                        
+                        # Handles function calling related to calendar
+                        
                 time.sleep(1)  # Wait for a second before checking again
                 
                 if tools_outputs:
