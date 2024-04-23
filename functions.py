@@ -279,6 +279,7 @@ def create_assistant(client):
         file = client.files.create(file=open("knowledge.docx", "rb"), purpose='assistants')
         file_invoices = client.files.create(file=open("invoices.md", "rb"), purpose='assistants')
         file_inventory = client.files.create(file=open("inventory.md", "rb"), purpose='assistants')
+        file_calendar = client.files.create(file=open("calendar.md", "rb"), purpose='assistants')
         file_site_data = client.files.create(file=open('site_data.txt', 'rb'), purpose='assistants')
 
         assistant = client.beta.assistants.create(
@@ -588,7 +589,7 @@ def create_assistant(client):
                 }
 
             ],
-            file_ids=[file.id, file_invoices.id, file_inventory.id, file_site_data.id])
+            file_ids=[file.id, file_invoices.id, file_inventory.id, file_calendar.id,file_site_data.id])
 
         # Create a new assistant.json file to load on future runs
         with open(assistant_file_path, 'w') as file:
