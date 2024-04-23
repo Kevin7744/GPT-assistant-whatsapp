@@ -451,6 +451,9 @@ def create_assistant(client):
                                 },
                                 "days_of_week": {
                                     "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    },
                                     "description": "List of days of the week when the event occurs"
                                 },
                                 "start_time": {
@@ -482,8 +485,7 @@ def create_assistant(client):
                     "type": "function",  # This adds the lead capture as a tool
                     "function": {
                         "name": "create_lead",
-                        "description":
-                        "Capture lead details and save to Airtable.",
+                        "description": "Capture lead details and save to Airtable.",
                         "parameters": {
                             "type": "object",
                             "properties": {
