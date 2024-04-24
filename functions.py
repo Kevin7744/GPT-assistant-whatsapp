@@ -285,7 +285,7 @@ def create_assistant(client):
         assistant = client.beta.assistants.create(
             # Getting assistant prompt from "prompts.py" file, edit on left panel if you want to change the prompt
             instructions=assistant_instructions,
-            model="gpt-4-1106-preview",
+            model="gpt-3.5-turbo-0125",
             tools=[
                 {"type": "retrieval"},  # This adds the knowledge base as a tool
                 {
