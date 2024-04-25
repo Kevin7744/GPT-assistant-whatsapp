@@ -609,7 +609,6 @@ def create_assistant(client):
                         }
                     }
                 }
-
             ],
             file_ids=[file_cleaning.id, file_invoices.id, file_inventory.id, file_calendar.id])
 
