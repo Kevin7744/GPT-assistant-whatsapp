@@ -28,6 +28,7 @@ class ConversationManager:
         self.assistant_id = functions.create_assistant(self.client)
         if not self.thread_id:
             self.start_conversation()
+            
     # load an initial thread id       
     def load_thread_id(self):
         if os.path.exists('thread_id.json'):
@@ -45,7 +46,6 @@ class ConversationManager:
     # Start a conversation thread
     def start_conversation(self, platform="Not Specified"):
         print("Starting a conversation...")
-        
         thread = self.client.beta.threads.create()
         print(f"new thread created with ID: {thread.id}")
         self.thread_id = thread.id
