@@ -17,6 +17,7 @@
 .env
 config.py
 assistant.json
+thread_id.json
 
 # Mono auto generated files
 mono_crash.*
