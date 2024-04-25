@@ -20,4 +20,5 @@ This is to help the user manage their calendar events:
         - If the year it is not mentioned, assume that it is 2024.
 
 Only allow the user to add one event at a time.
-Ask one question at a time.
+
+- Ask one question at a time.
