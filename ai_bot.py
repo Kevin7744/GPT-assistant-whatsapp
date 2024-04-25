@@ -5,6 +5,7 @@ from openai import OpenAI
 from config import Config
 from packaging import version
 import functions
+import os
 
 required_version = version.parse("1.1.1")
 current_version = version.parse(openai.__version__)
@@ -21,8 +22,25 @@ class ConversationManager:
         # Initialize OpenAI client    
         self.client =OpenAI(api_key=Config.OPENAI_API_KEY)
         
+        self.thread_id = None
+        self.load_thread_id()
+        
         self.assistant_id = functions.create_assistant(self.client)
-        self.start_conversation()
+        if not self.thread_id:
+            self.start_conversation()
+    # load an initial thread id       
+    def load_thread_id(self):
+        if os.path.exists('thread_id.json'):
+            with open('thread_id.json', 'r') as f:
+                data = json.load(f)
+                self.thread_id = data.get('thread_id')
+                print(f"Loaded thread ID: {self.thread_id}")
+
+    # save a thead_id when a new conversation is started
+    def save_thread_id(self):
+        with open('thread_id.json', 'w') as f:
+            data = {'thread_id': self.thread_id}
+            json.dump(data, f)
     
     # Start a conversation thread
     def start_conversation(self, platform="Not Specified"):
@@ -31,6 +49,7 @@ class ConversationManager:
         thread = self.client.beta.threads.create()
         print(f"new thread created with ID: {thread.id}")
         self.thread_id = thread.id
+        self.save_thread_id()
         return self.thread_id
         
     def chat(self, user_input):
