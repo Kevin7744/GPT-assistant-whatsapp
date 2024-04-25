@@ -1,14 +1,9 @@
 import json
-import os
 import time
 import openai
-import requests
 from openai import OpenAI
 from config import Config
 from packaging import version
-from outlook_wraper import OutlookWraper
-from airtable_wrapper import Airtable
-from flask import Flask, request, jsonify
 import functions
 
 required_version = version.parse("1.1.1")
@@ -157,10 +152,16 @@ class ConversationManager:
                             
                         elif tool_call.function.name == "create_inventory":
                             arguments = json.loads(tool_call.function.arguments)
-                            output = functions.change_inventory(arguments["product"], arguments["current_stock"], arguments["min_stock"])
+                            output = functions.create_inventory(arguments["product"], arguments["current_stock"], arguments["min_stock"])
                             tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
                         
+                        ######################################################################################################
                         # Handles function calling related to calendar
+                        elif tool_call.function.name == "current_date_time":
+                            arguments = json.loads(tool_call.function.arguments)
+                            output = functions.current_date_time()
+                            tools_outputs.append({"tool_call_id": tool_call.id, "output": json.dumps(output)})
+                            
                         elif tool_call.function.name == "create_event":
                             arguments = json.loads(tool_call.function.arguments)
                             output = functions.create_event(arguments["name"], arguments["date"], arguments["time"], arguments["duration"])

@@ -12,7 +12,6 @@ import datetime
 client = OpenAI(api_key=Config.OPENAI_API_KEY)
 
 
-
 #############################-- Functions Related to invoices -- ##############################################
 invoices_airtable = Airtable(Config.INVOICE_AIRTABLE_TOKEN, 
                             Config.INVOICE_AIRTABLE_BASE_ID, 
@@ -24,6 +23,7 @@ def check_invoices():
     """Function to get all the invoices records
     """
     return invoices_airtable.get_all_records()
+
 
 # Function to create an invoice
 def create_invoice(business_name, phone_number, email):
@@ -83,13 +83,13 @@ inventory_airtable = Airtable(Config.INVENTORY_AIRTABLE_TOKEN,
                               Config.INVENTORY_AIRTABLE_BASE_ID, 
                               Config.INVENTORY_AIRTABLE_TABLE_ID, 
                               Config.INVENTORY_AIRTABLE_FIELDS)
-
-        
+       
 # Function to get ll inventory records
 def check_inventory():
     """Function to get all the inventory records
     """
     return inventory_airtable.get_all_records()
+
 
 # Function to handle changes in inventory
 def change_inventory(product, current_stock):
@@ -106,6 +106,7 @@ def change_inventory(product, current_stock):
         return f'Ok, I just updated the entry for {product}'
     else:
         return 'What you are trying to do is not possible. It is likely you entered the name of a product that does not exist.'
+
 
 # Function to handle creating a new entry in inventory
 def create_inventory(product, current_stock, min_stock):
@@ -125,8 +126,18 @@ def create_inventory(product, current_stock, min_stock):
         return 'Unfortunately, there was an error processing your request. Please try again'
    
 
+
 ################################### -- Functions related to calendar events -- ####################################################################################
 outlook_wraper = OutlookWraper()
+
+# Function to know the current date and time
+def current_date_time():
+    """
+    Function to get the current date and time
+    """
+    current_datetime = datetime.datetime.now()
+    return f"The current date and time is: {current_datetime.strftime('%d/%m/%Y %H:%M')}"
+
 
 # Function to handle single event creation on the calendar
 def create_event(name, date, time, duration):
@@ -152,6 +163,7 @@ def create_event(name, date, time, duration):
     else:
         return 'There was an error adding the event to the calendar, please try again'
  
+
 # Function to handle recurring event creation on the calendar 
 def create_recurring_event(name, days_of_week, start_time, end_time, start_date, end_date, length_weeks):
     """Function to handle creating a recurring event in the calendar
@@ -207,8 +219,8 @@ def create_lead(name, phone, address, email):
         print(f"Failed to create lead: {response.text}")
         return ''
 
-def save_answers(full_name, phone, email, street_name, zip_code, city,
-                 service_type, 
+
+def save_answers(full_name, phone, email, street_name, zip_code, city, service_type, 
                  ot1, ot2, ot3, ot4, ot5,  # responses for one-time cleaning
                  rc1, rc2, rc3, rc4, rc5,  # responses for regular cleaning
                  pc1, pc2, pc3, pc4, pc5, pc6,  # responses for post-construction cleaning
@@ -406,6 +418,14 @@ def create_assistant(client):
                             },
                             "required": ["product", "current_stock", "min_stock"]
                         }
+                    }
+                },
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "current_date_time", # This adds the current date and time function as a tool
+                        "description": "Function to get the current date and time",
+                        "parameters": {}
                     }
                 },
                 {
