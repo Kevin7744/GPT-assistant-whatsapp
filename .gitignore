@@ -18,6 +18,7 @@
 config.py
 assistant.json
 thread_id.json
+knowledge.docx
 
 # Mono auto generated files
 mono_crash.*
